@@ -38,19 +38,6 @@ Everything is real, nothing made up:
 
 See [`datasets/README.md`](datasets/README.md) for where each one came from.
 
-## How to run any practical
-
-```bash
-git clone <this-repo-url>
-cd <repo-folder>
-pip install -r requirements.txt
-cd Practical-01-EDA-Similarity-Measures
-python similarity_demo.py
-```
-
-Every practical works the same way — go into its folder, run the `.py` file.
-
-
 
 ## If something doesn't work
 
