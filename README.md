@@ -50,16 +50,7 @@ python similarity_demo.py
 
 Every practical works the same way — go into its folder, run the `.py` file.
 
-## Putting this on your own GitHub
 
-```bash
-git init
-git add .
-git commit -m "INT396 practicals"
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
-```
 
 ## If something doesn't work
 
