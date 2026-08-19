@@ -128,7 +128,7 @@ $$
 B=[21,15,81]
 $$
 
-![Customer vector](images/workflow.svg)
+![Customer vector](images/customer_vector.svg)
 
 ---
 
@@ -186,6 +186,8 @@ Output:
 ```text
 42.0476
 ```
+
+> **Read the result:** the code gives the same value we calculated by hand: `42.0476`.
 
 ### Observation
 
