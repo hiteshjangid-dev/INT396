@@ -256,7 +256,7 @@ Cosine asks:
 $$
 S_{\mathrm{cos}}(A,B)
 =
-\frac{A\cdot B}{\operatorname{norm}(A)\operatorname{norm}(B)}
+\frac{A \cdot B}{\|A\|\,\|B\|}
 $$
 
 ### Code
