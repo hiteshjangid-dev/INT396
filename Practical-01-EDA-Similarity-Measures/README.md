@@ -254,7 +254,7 @@ Cosine asks:
 ### Formula
 
 $$
-\text{Cosine Similarity}
+S_{\mathrm{cos}}(A,B)
 =
 \frac{A\cdot B}{\|A\|\|B\|}
 $$
@@ -281,10 +281,10 @@ Output:
 Also remember:
 
 $$
-\text{Cosine distance}
-=
-1-\text{Cosine similarity}
+D_{\mathrm{cos}} = 1-S_{\mathrm{cos}}
 $$
+
+Here `D_cos` means cosine distance and `S_cos` means cosine similarity.
 
 So:
 
@@ -478,7 +478,7 @@ business meaning
 **Euclidean**
 
 $$
-\sqrt{\sum(A_i-B_i)^2}
+d_E(A,B)=\sqrt{\sum_{i=1}^{n}(A_i-B_i)^2}
 $$
 
 Straight-line distance.
@@ -486,7 +486,7 @@ Straight-line distance.
 **Manhattan**
 
 $$
-\sum|A_i-B_i|
+d_M(A,B)=\sum_{i=1}^{n}|A_i-B_i|
 $$
 
 Add the movement.
@@ -494,7 +494,7 @@ Add the movement.
 **Cosine**
 
 $$
-\frac{A\cdot B}{\|A\|\|B\|}
+S_{\mathrm{cos}}(A,B)=\frac{A\cdot B}{\|A\|\|B\|}
 $$
 
 Compare direction.
