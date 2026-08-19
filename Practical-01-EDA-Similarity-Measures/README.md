@@ -86,7 +86,7 @@ flowchart TD
 $$d_{euclidean}(x, y) = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}$$
 
 **Step by step, in words:**
-1. For each feature $i$ (Age, Income, Spending Score), subtract customer $y$'s value from customer $x$'s value.
+1. For each feature `i` (Age, Income, Spending Score), subtract customer `y`'s value from customer `x`'s value.
 2. Square that difference (this makes negative differences positive, and punishes big gaps more than small ones).
 3. Add up all the squared differences.
 4. Take the square root of that total.
@@ -96,26 +96,26 @@ $$d_{euclidean}(x, y) = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}$$
 $$d_{manhattan}(x, y) = \sum_{i=1}^{n} |x_i - y_i|$$
 
 **Step by step, in words:**
-1. For each feature, subtract $y$'s value from $x$'s value.
+1. For each feature, subtract `y`'s value from `x`'s value.
 2. Take the absolute value (just drop the negative sign — no squaring).
 3. Add up all these absolute differences.
 
 ### 📐 Cosine Similarity (angle between two vectors)
 
-$$\text{cosine\_similarity}(x, y) = \frac{x \cdot y}{\|x\| \, \|y\|} = \frac{\sum_{i=1}^{n} x_i y_i}{\sqrt{\sum_{i=1}^{n} x_i^2} \cdot \sqrt{\sum_{i=1}^{n} y_i^2}}$$
+$$\text{cosine similarity}(x, y) = \frac{x \cdot y}{\|x\| \, \|y\|} = \frac{\sum_{i=1}^{n} x_i y_i}{\sqrt{\sum_{i=1}^{n} x_i^2} \cdot \sqrt{\sum_{i=1}^{n} y_i^2}}$$
 
 **Step by step, in words:**
-1. Multiply each matching pair of features together ($x_i \times y_i$), and add those products up — this is the "dot product," on the top of the fraction.
-2. Calculate the "length" of vector $x$: square every value, add them up, take the square root.
-3. Do the same to get the "length" of vector $y$.
-4. Divide the dot product by (length of $x$ × length of $y$).
-5. The result is always between $-1$ and $1$. Closer to $1$ = pointing the same direction (similar pattern).
+1. Multiply each matching pair of features together (`x_i` times `y_i`), and add those products up — this is the "dot product," on the top of the fraction.
+2. Calculate the "length" of vector `x`: square every value, add them up, take the square root.
+3. Do the same to get the "length" of vector `y`.
+4. Divide the dot product by (length of `x` times length of `y`).
+5. The result is always between `-1` and `1`. Closer to `1` means pointing the same direction (similar pattern).
 
 ### 📐 StandardScaler (used before every distance calculation from here on)
 
 $$x_{scaled} = \frac{x - \mu}{\sigma}$$
 
-Where $\mu$ = the column's average, $\sigma$ = the column's standard deviation. This forces every feature onto the same footing before we measure distance.
+Where `mu` = the column's average, `sigma` = the column's standard deviation. This forces every feature onto the same footing before we measure distance.
 
 ---
 
@@ -256,11 +256,16 @@ max         200.0   70.0               137.0                    99.0
 
 ### 🔹 Step 2 — Picture the data before doing any math
 
+First, one list of column names is defined once and reused for every step in this script — histograms, distance math, everything:
+
 ```python
-cols = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
+features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
+```
+
+```python
 colors = ["#3b82f6", "#16a34a", "#f97316"]
 fig, axes = plt.subplots(1, 3, figsize=(14, 4.3))
-for ax, col, color in zip(axes, cols, colors):
+for ax, col, color in zip(axes, features, colors):
     ax.hist(df[col], bins=20, color=color)
     ax.set_title(col)
 plt.tight_layout()
@@ -268,7 +273,7 @@ plt.savefig("images/01_eda_distributions.png")
 plt.close()
 ```
 
-**What this does:** loops through the 3 numeric columns and draws one histogram per column, all in a single `for` loop instead of repeating the same 3 lines by hand for each feature — shorter code, same result.
+**What this does:** loops through the 3 numeric columns (already stored in `features`, defined once and reused everywhere in this script) and draws one histogram per column, all in a single `for` loop instead of repeating the same 3 lines by hand for each feature — shorter code, same result, and no duplicate list definitions.
 
 ![Distributions](images/01_eda_distributions.png)
 
@@ -292,7 +297,6 @@ plt.close()
 ### 🔹 Step 3 — Calculate all three distances on two real customers
 
 ```python
-features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
 X = df[features].values
 a, b = X[0], X[1]
 print("\nCustomer A:", df.iloc[0][features].to_dict())
@@ -413,11 +417,13 @@ df = pd.read_csv("../datasets/mall_customers.csv")
 print("Loaded", len(df), "real customers")
 print(df.describe().round(1))
 
+# --- The 3 numeric features used everywhere below (defined once, reused) ---
+features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
+
 # --- Chart 1: distributions of the 3 numeric features ---
-cols = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
 colors = ["#3b82f6", "#16a34a", "#f97316"]
 fig, axes = plt.subplots(1, 3, figsize=(14, 4.3))
-for ax, col, color in zip(axes, cols, colors):
+for ax, col, color in zip(axes, features, colors):
     ax.hist(df[col], bins=20, color=color)
     ax.set_title(col)
 plt.tight_layout()
@@ -433,7 +439,6 @@ plt.savefig("images/02_income_vs_spending.png")
 plt.close()
 
 # --- Three distance measures on two real customers ---
-features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
 X = df[features].values
 a, b = X[0], X[1]
 print("\nCustomer A:", df.iloc[0][features].to_dict())
@@ -470,7 +475,7 @@ print(f"\nEuclidean and Cosine agree on {overlap}/5 neighbours -- different meas
 print("\nDone. Charts saved in images/")
 ```
 
-76 lines total, every import used, every variable used, nothing computed twice.
+77 lines total, every import used, every variable used, nothing computed twice, nothing defined twice.
 
 ---
 
@@ -502,14 +507,15 @@ os.makedirs("images", exist_ok=True)
 df = pd.read_csv("../datasets/mall_customers.csv")
 print("Loaded", len(df), "real customers")
 print(df.describe().round(1))
+
+features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
 ```
 
 **Cell 3 — draw the charts:**
 ```python
-cols = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
 colors = ["#3b82f6", "#16a34a", "#f97316"]
 fig, axes = plt.subplots(1, 3, figsize=(14, 4.3))
-for ax, col, color in zip(axes, cols, colors):
+for ax, col, color in zip(axes, features, colors):
     ax.hist(df[col], bins=20, color=color)
     ax.set_title(col)
 plt.tight_layout()
@@ -526,7 +532,6 @@ plt.show()
 
 **Cell 4 — the three distance measures:**
 ```python
-features = ["Age", "Annual Income (k$)", "Spending Score (1-100)"]
 X = df[features].values
 a, b = X[0], X[1]
 print("Customer A:", df.iloc[0][features].to_dict())
@@ -626,7 +631,7 @@ Everything here — features, scaling, distance — is the foundation every clus
 
 | File | What it is |
 |---|---|
-| `similarity_demo.py` | Full tested code, 76 lines, zero unused imports |
+| `similarity_demo.py` | Full tested code, 77 lines, zero unused imports, zero duplicate variables |
 | `images/01_eda_distributions.png` | Age, Income, Spending Score charts |
 | `images/02_income_vs_spending.png` | Main scatter plot |
 
