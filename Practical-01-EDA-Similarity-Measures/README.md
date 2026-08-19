@@ -1,135 +1,53 @@
 # INT396 Practical 1 — Customer Similarity
 
-> **Customer Behavior Analysis with Euclidean, Manhattan and Cosine Similarity**
-
-This practical uses the real `mall_customers.csv` dataset to answer one question:
-
-> **How can a computer measure whether two customers are similar when no customer group is given?**
+**Goal:** Use the real `mall_customers.csv` file to understand how a computer measures similarity between customers.
 
 ---
 
-## 1. Practical objective
-
-You will:
-
-- inspect the real customer data;
-- select the correct analytical features;
-- represent a customer as a vector;
-- calculate Euclidean distance;
-- calculate Manhattan distance;
-- calculate Cosine similarity and cosine distance correctly;
-- compare one customer with the other 199 customers;
-- find nearest neighbours;
-- standardize the features;
-- repeat the experiment;
-- explain what changed and why.
-
-### Complete workflow
+## 1. What we will do
 
 ```mermaid
 flowchart TB
-    A["📄 mall_customers.csv<br/>200 × 5"] --> B["🔎 EDA"]
-    B --> C["🧩 Select Age + Income + Spending"]
-    C --> D["📐 Customer vector"]
-    D --> E["Measure relationship"]
-    E --> F["🐦 Euclidean"]
-    E --> G["🚕 Manhattan"]
-    E --> H["🧭 Cosine"]
-    F --> I["👥 Nearest neighbours"]
-    G --> I
-    H --> I
-    I --> J["📏 Standardize"]
-    J --> K["🔁 Re-run"]
-    K --> L["📝 Observe + interpret"]
+    A["📄 Real dataset"] --> B["🔎 Check the data"]
+    B --> C["🧩 Pick 3 features"]
+    C --> D["📐 Make a vector"]
+    D --> E["🐦 Euclidean"]
+    D --> F["🚕 Manhattan"]
+    D --> G["🧭 Cosine"]
+    E --> H["👥 Find nearest customers"]
+    F --> H
+    G --> H
+    H --> I["📏 Scale the data"]
+    I --> J["📝 Compare and conclude"]
 ```
 
-![Complete practical workflow](images/01_workflow.svg)
+![Practical workflow](images/workflow.svg)
 
 ---
 
 ## 2. Dataset
 
-Input file:
+We use the real **200-customer** dataset.
 
-```text
-mall_customers.csv
-```
+| Column | Use |
+|---|---|
+| `CustomerID` | ID only |
+| `Gender` | description only |
+| `Age` | use |
+| `Annual Income (k$)` | use |
+| `Spending Score (1-100)` | use |
 
-Actual dataset:
-
-| Property | Value |
-|---|---:|
-| Rows | 200 |
-| Columns | 5 |
-| Missing values | 0 |
-
-### Columns
-
-| Column | Meaning | Analytical feature? |
-|---|---|:---:|
-| `CustomerID` | identifier | No |
-| `Gender` | descriptive category | No |
-| `Age` | age | Yes |
-| `Annual Income (k$)` | income in thousands | Yes |
-| `Spending Score (1-100)` | spending score | Yes |
-
-Use:
-
-$$
-X=[Age,Income,Spending]
-$$
-
-Do not use `CustomerID` as a mathematical feature. It identifies the observation but does not describe its behaviour.
+There are **200 rows, 5 columns, and no missing values**.
 
 ---
 
-## 3. GitHub repository
-
-```text
-INT396-Practical-01/
-├── README.md
-├── mall_customers.csv
-├── similarity_lab.py
-├── requirements.txt
-├── images/
-│   ├── 01_workflow.svg
-│   ├── 02_customer_vector.svg
-│   ├── 03_euclidean_steps.svg
-│   ├── 04_manhattan.svg
-│   ├── 05_cosine.svg
-│   └── 06_scaling.svg
-└── outputs/
-    ├── customer_space.png
-    ├── scaling_comparison.png
-    └── nearest_comparison.png
-```
-
----
-
-## 4. Setup
-
-### Local Python
-
-```bash
-python -m pip install -r requirements.txt
-python similarity_lab.py
-```
-
-Optional explicit paths:
-
-```bash
-python similarity_lab.py --data mall_customers.csv --output outputs
-```
+## 3. Run the practical
 
 ### Google Colab
-
-#### Cell 1 — Install
 
 ```python
 !pip install -q numpy pandas matplotlib scikit-learn
 ```
-
-#### Cell 2 — Imports
 
 ```python
 import numpy as np
@@ -141,20 +59,7 @@ from sklearn.metrics.pairwise import cosine_similarity, cosine_distances
 from sklearn.preprocessing import StandardScaler
 ```
 
-| Library | Why |
-|---|---|
-| pandas | CSV and tabular data |
-| NumPy | vector arithmetic |
-| Matplotlib | visualization |
-| scikit-learn distances | pairwise distances |
-| cosine functions | cosine distance/similarity |
-| StandardScaler | standardization |
-
----
-
-# 5. Step 1 — Load and inspect
-
-### Cell 3
+Load:
 
 ```python
 df = pd.read_csv("mall_customers.csv")
@@ -167,156 +72,53 @@ Output:
 (200, 5)
 ```
 
-### Cell 4
-
-```python
-print(df.head())
-print(df.info())
-```
-
-The real dataset begins with:
-
-| CustomerID | Gender | Age | Income | Spending |
-|---:|---|---:|---:|---:|
-| 1 | Male | 19 | 15 | 39 |
-| 2 | Male | 21 | 15 | 81 |
-| 3 | Female | 20 | 16 | 6 |
-| 4 | Female | 23 | 16 | 77 |
-| 5 | Female | 31 | 17 | 40 |
-
-### Cell 5 — Missing values
+Check missing values:
 
 ```python
 print(df.isna().sum())
 ```
 
-Output:
-
-```text
-CustomerID                 0
-Gender                     0
-Age                        0
-Annual Income (k$)         0
-Spending Score (1-100)     0
-```
-
-**Observation:** the uploaded dataset has no missing values.
+Result: all columns have `0` missing values.
 
 ---
 
-# 6. Step 2 — Select features
+# 4. Understand one customer
 
-### Cell 6
+Use these three features:
 
 ```python
-FEATURES = [
+features = [
     "Age",
     "Annual Income (k$)",
     "Spending Score (1-100)"
 ]
 
-X = df[FEATURES]
+X = df[features]
 ```
 
-```mermaid
-flowchart TB
-    A["One customer row"] --> B["CustomerID"]
-    A --> C["Gender"]
-    A --> D["Age"]
-    A --> E["Annual Income"]
-    A --> F["Spending Score"]
-    D --> G["Analytical vector"]
-    E --> G
-    F --> G
-```
-
-![Customer vector](images/02_customer_vector.svg)
-
----
-
-# 7. Step 3 — EDA
-
-### Cell 7
+Customer 1:
 
 ```python
-print(X.describe().round(2))
+A = df.iloc[0][features].to_numpy(float)
+print(A)
 ```
-
-Real summary:
-
-| Statistic | Age | Income (k$) | Spending |
-|---|---:|---:|---:|
-| Count | 200 | 200 | 200 |
-| Mean | 38.85 | 60.56 | 50.20 |
-| Std | 13.97 | 26.26 | 25.82 |
-| Min | 18.00 | 15.00 | 1.00 |
-| Median | 36.00 | 61.50 | 50.00 |
-| Max | 70.00 | 137.00 | 99.00 |
-
-### Important observation
-
-The features have different numeric ranges.
 
 ```text
-Age       → 18–70
-Income    → 15–137
-Spending  → 1–99
+[19. 15. 39.]
 ```
 
-This does not make distance calculation impossible.
-
-It creates a preprocessing question:
-
-> **Should the features be placed on a comparable scale before measuring distance?**
-
-That question is tested later.
-
-### Cell 8 — Visualize the real data
+Customer 2:
 
 ```python
-plt.figure(figsize=(9, 5))
-plt.scatter(
-    df["Annual Income (k$)"],
-    df["Spending Score (1-100)"],
-    s=30,
-    alpha=0.72
-)
-
-plt.xlabel("Annual Income (k$)")
-plt.ylabel("Spending Score (1-100)")
-plt.title("Mall Customers: Income vs Spending")
-plt.tight_layout()
-plt.show()
+B = df.iloc[1][features].to_numpy(float)
+print(B)
 ```
-
-![Customer space](outputs/customer_space.png)
-
-At this point, the task is **exploration**, not clustering.
-
----
-
-# 8. Step 4 — Build the customer vectors
-
-Use two actual rows from the dataset.
-
-### Cell 9
-
-```python
-A = df.iloc[0][FEATURES].to_numpy(dtype=float)
-B = df.iloc[1][FEATURES].to_numpy(dtype=float)
-
-print("A =", A)
-print("B =", B)
-```
-
-Output:
 
 ```text
-A = [19. 15. 39.]
-B = [21. 15. 81.]
+[21. 15. 81.]
 ```
 
-Therefore:
+So:
 
 $$
 A=[19,15,39]
@@ -326,100 +128,86 @@ $$
 B=[21,15,81]
 $$
 
-Vector order:
-
-```text
-[Age, Income, Spending]
-```
+![Customer vector](images/workflow.svg)
 
 ---
 
-# 9. Step 5 — Euclidean distance
+# 5. Euclidean distance
 
-![Euclidean steps](images/03_euclidean_steps.svg)
+### Simple idea
 
-### Question
-
-> **How far apart are A and B in this feature space?**
+**How far apart are the two points?**
 
 ### Formula
 
 $$
-d_E(A,B)=
-\sqrt{\sum_{i=1}^{n}(A_i-B_i)^2}
+d(A,B)=\sqrt{\sum_{i=1}^{n}(A_i-B_i)^2}
 $$
 
-For three features:
+### Real example
+
+#### Step 1 — subtract
 
 $$
-d_E=
-\sqrt{
-(A_1-B_1)^2+
-(A_2-B_2)^2+
-(A_3-B_3)^2
-}
+[19-21,\;15-15,\;39-81]
+=
+[-2,0,-42]
 $$
 
-### Step-by-step calculation
-
-#### 1. Subtract
+#### Step 2 — square
 
 $$
-A-B=[-2,0,-42]
+[4,0,1764]
 $$
 
-#### 2. Square
-
-$$
-[-2,0,-42]^2=[4,0,1764]
-$$
-
-#### 3. Add
+#### Step 3 — add
 
 $$
 4+0+1764=1768
 $$
 
-#### 4. Square root
+#### Step 4 — square root
 
 $$
 \sqrt{1768}=42.0476
 $$
 
+![Euclidean calculation](images/euclidean.svg)
+
 ### Code
 
 ```python
 euclidean = np.linalg.norm(A - B)
-print(f"Euclidean distance: {euclidean:.4f}")
+print(euclidean)
 ```
 
 Output:
 
 ```text
-Euclidean distance: 42.0476
+42.0476
 ```
 
-| Metric | Result |
-|---|---:|
-| Euclidean | **42.0476** |
+### Observation
 
-### Interpretation
-
-Lower value means closer under this Euclidean feature space.
+**Smaller Euclidean distance means closer customers under this representation.**
 
 ---
 
-# 10. Step 6 — Manhattan distance
+# 6. Manhattan distance
 
-![Manhattan](images/04_manhattan.svg)
+### Simple idea
+
+Think of a city road.
+
+You add the movement in each direction.
 
 ### Formula
 
 $$
-d_M(A,B)=\sum_{i=1}^{n}|A_i-B_i|
+d(A,B)=\sum_{i=1}^{n}|A_i-B_i|
 $$
 
-For the real example:
+For our customers:
 
 $$
 |19-21|+|15-15|+|39-81|
@@ -433,158 +221,111 @@ $$
 
 ```python
 manhattan = np.abs(A - B).sum()
-print(f"Manhattan distance: {manhattan:.4f}")
+print(manhattan)
 ```
 
 Output:
 
 ```text
-Manhattan distance: 44.0000
+44.0000
 ```
 
-| Metric | Result |
-|---|---:|
-| Manhattan | **44.0000** |
+### Observation
 
-### Interpretation
-
-Manhattan adds the absolute difference separately across the dimensions.
+Euclidean and Manhattan use the same data but use different rules.
 
 ```text
-Euclidean → direct geometric separation
-Manhattan → total axis-wise separation
+Euclidean → straight-line distance
+Manhattan → add each movement
 ```
 
 ---
 
-# 11. Step 7 — Cosine similarity
+# 7. Cosine similarity
 
-![Cosine](images/05_cosine.svg)
+### Simple idea
 
-### Question
+Cosine asks:
 
-> **How aligned are the two vectors?**
+> **Are the two vectors pointing in a similar direction?**
 
 ### Formula
 
 $$
-s_{cos}(A,B)=
-rac{A\cdot B}{\|A\|\|B\|}
-$$
-
-where:
-
-$$
-A\cdot B=\sum_i A_iB_i
-$$
-
-and:
-
-$$
-\|A\|=\sqrt{\sum_i A_i^2}
-$$
-
-### Similarity vs distance
-
-Cosine distance:
-
-$$
-d_{cos}=1-s_{cos}
-$$
-
-Therefore:
-
-$$
-s_{cos}=1-d_{cos}
+\text{Cosine Similarity}
+=
+\frac{A\cdot B}{\|A\|\|B\|}
 $$
 
 ### Code
 
 ```python
-cosine_dist = cosine_distances(
+cosine_distance = cosine_distances(
     A.reshape(1, -1),
     B.reshape(1, -1)
 )[0, 0]
 
-cosine_sim = cosine_similarity(
-    A.reshape(1, -1),
-    B.reshape(1, -1)
-)[0, 0]
+cosine_similarity_value = 1 - cosine_distance
 
-print(f"Cosine distance   : {cosine_dist:.4f}")
-print(f"Cosine similarity : {cosine_sim:.4f}")
+print(cosine_similarity_value)
 ```
 
-Real output:
+Output:
 
-| Measure | Value |
-|---|---:|
-| Cosine distance | **0.0306** |
-| Cosine similarity | **0.9694** |
+```text
+0.9694
+```
 
-### Interpretation
+Also remember:
 
-A value close to `1` means strong directional alignment.
+$$
+\text{Cosine distance}
+=
+1-\text{Cosine similarity}
+$$
+
+So:
+
+```text
+0.9694 → similarity
+0.0306 → distance
+```
+
+### Observation
+
+A similarity close to `1` means strong directional similarity.
 
 ---
 
-# 12. Step 8 — Compare the metrics
+# 8. Compare the three
 
-| Metric | Value | Better direction | Question |
-|---|---:|---|---|
-| Euclidean | 42.0476 | lower | How far? |
-| Manhattan | 44.0000 | lower | How much axis-wise movement? |
-| Cosine similarity | 0.9694 | higher | How aligned? |
+| Metric | Real result | Easy meaning |
+|---|---:|---|
+| Euclidean | **42.0476** | how far? |
+| Manhattan | **44.0000** | how much movement? |
+| Cosine similarity | **0.9694** | how aligned? |
 
-```mermaid
-flowchart TB
-    A["Same two customers"] --> B["Euclidean"]
-    A --> C["Manhattan"]
-    A --> D["Cosine"]
-    B --> E["Geometry"]
-    C --> F["Axis-wise movement"]
-    D --> G["Direction"]
-```
-
-**Do not compare the raw magnitudes as if they were the same scale.** Each measure has a different definition.
+Do not compare the numbers directly. They use different scales and meanings.
 
 ---
 
-# 13. Step 9 — Find the nearest customers in all 200 rows
+# 9. Use all 200 customers
 
-The real experiment is now:
+Now we do the real experiment.
 
 ```text
 Customer 1
-    ↓
-compare with remaining 199 customers
-    ↓
-calculate score
-    ↓
+     ↓
+compare with 199 customers
+     ↓
+get scores
+     ↓
 sort
-    ↓
-top 5
+     ↓
+find top 5
 ```
 
-## Euclidean
-
-```python
-query = X[0:1]
-
-d = pairwise_distances(
-    X,
-    query,
-    metric="euclidean"
-).ravel()
-
-order = np.argsort(d)
-order = order[order != 0][:5]
-
-for idx in order:
-    print(int(df.iloc[idx]["CustomerID"]), d[idx])
-```
-
-Real top 5:
+### Euclidean result
 
 | Rank | Customer | Distance |
 |---:|---:|---:|
@@ -594,20 +335,7 @@ Real top 5:
 | 4 | 29 | 26.4764 |
 | 5 | 49 | 27.0924 |
 
-## Manhattan
-
-```python
-d = pairwise_distances(
-    X,
-    query,
-    metric="manhattan"
-).ravel()
-
-order = np.argsort(d)
-order = order[order != 0][:5]
-```
-
-Real top 5:
+### Manhattan result
 
 | Rank | Customer | Distance |
 |---:|---:|---:|
@@ -617,20 +345,7 @@ Real top 5:
 | 4 | 18 | 34.0000 |
 | 5 | 3 | 35.0000 |
 
-## Cosine
-
-```python
-d = cosine_distances(X, query).ravel()
-
-order = np.argsort(d)
-order = order[order != 0][:5]
-
-for idx in order:
-    similarity = 1 - d[idx]
-    print(int(df.iloc[idx]["CustomerID"]), similarity)
-```
-
-Real top 5:
+### Cosine result
 
 | Rank | Customer | Similarity |
 |---:|---:|---:|
@@ -640,26 +355,32 @@ Real top 5:
 | 4 | 10 | 0.9940 |
 | 5 | 26 | 0.9940 |
 
-![Nearest neighbour comparison](outputs/nearest_comparison.png)
+### Observation
 
-### What should you notice?
+The lists are different.
 
-Euclidean and Manhattan agree on the first three customers here, but their later ranks differ.
+**Why?**
 
-Cosine produces a different list.
-
-That is the practical evidence that **metric choice changes the meaning of “nearest.”**
+Because each metric has a different meaning of "similar".
 
 ---
 
-# 14. Step 10 — Scaling experiment
+# 10. Scaling
 
-![Scaling](images/06_scaling.svg)
+Look at the feature ranges:
 
-### Standardization
+```text
+Age       → 18 to 70
+Income    → 15 to 137
+Spending  → 1 to 99
+```
+
+A distance formula only sees numbers.
+
+We can standardize using:
 
 $$
-z=rac{x-\mu}{\sigma}
+z=\frac{x-\mu}{\sigma}
 $$
 
 ### Code
@@ -672,11 +393,14 @@ A_scaled = X_scaled[0]
 B_scaled = X_scaled[1]
 ```
 
-Repeat the metrics:
+Calculate again:
 
 ```python
 euclidean_scaled = np.linalg.norm(A_scaled - B_scaled)
-manhattan_scaled = np.abs(A_scaled - B_scaled).sum()
+
+manhattan_scaled = np.abs(
+    A_scaled - B_scaled
+).sum()
 
 cosine_scaled = cosine_similarity(
     A_scaled.reshape(1, -1),
@@ -686,139 +410,116 @@ cosine_scaled = cosine_similarity(
 
 ### Real result
 
-| Metric | Raw | Standardized |
+| Metric | Before | After scaling |
 |---|---:|---:|
 | Euclidean | 42.0476 | **1.6368** |
 | Manhattan | 44.0000 | **1.7740** |
 | Cosine | 0.9694 | **0.7659** |
 
-![Scaling comparison](outputs/scaling_comparison.png)
+### Observation
 
-### Interpretation
+The customers did not change.
 
-The rows did not change.
-
-The **feature coordinate system changed**.
-
-Therefore the measured relationship changed.
+The **scale of the features changed**, so the measured relationship changed.
 
 ---
 
-# 15. Controlled experiments
+# 11. Try one experiment
 
-These are the experiments to perform after the main run.
-
-## Experiment A — Change the query
+Change the customers:
 
 ```python
-query = X[20:21]
+A = X[0]
+B = X[4]
 ```
 
-Re-run the nearest-neighbour calculation.
+Run the three metrics again.
 
-Record:
+Write:
 
-| Question | Observation |
-|---|---|
-| Did the nearest customer change? | |
-| Did the top five change? | |
-| Why? | |
-
-## Experiment B — Compare raw and scaled space
-
-```python
-print("Raw:", np.linalg.norm(A - B))
-print("Scaled:", np.linalg.norm(A_scaled - B_scaled))
-```
-
-Expected:
-
-| Space | Euclidean |
+| Metric | Your result |
 |---|---:|
-| Raw | 42.0476 |
-| Standardized | 1.6368 |
+| Euclidean | |
+| Manhattan | |
+| Cosine | |
 
-## Experiment C — Compare metric rankings
+Then ask:
 
-Write the top five customer IDs:
+> Which metric changed the most?
+
+> Why are the three answers different?
+
+---
+
+# 12. Final practical observation
+
+You should now understand this simple chain:
 
 ```text
-Euclidean:
-____________________
-
-Manhattan:
-____________________
-
-Cosine:
-____________________
+Customer data
+     ↓
+numbers
+     ↓
+vector
+     ↓
+distance / similarity formula
+     ↓
+score
+     ↓
+nearest customers
+     ↓
+business meaning
 ```
 
-Then answer:
+### Remember
 
-> Why are the rankings not identical?
+**Euclidean**
 
----
+$$
+\sqrt{\sum(A_i-B_i)^2}
+$$
 
-# 16. Common mistakes
+Straight-line distance.
 
-| Mistake | Correct rule |
-|---|---|
-| Include `CustomerID` | use it only as an identifier |
-| Read cosine distance as similarity | convert using `1 - distance` |
-| Compare `42` and `0.97` directly | interpret each metric on its own scale |
-| Skip EDA | inspect ranges before choosing preprocessing |
-| Assume scaling always improves everything | scaling changes the representation; evaluate the effect |
-| Use chart position as the score | the formula/code determines the score |
+**Manhattan**
 
----
+$$
+\sum|A_i-B_i|
+$$
 
-# 17. Practical record
+Add the movement.
 
-| Item | Result |
-|---|---|
-| Dataset | `mall_customers.csv` |
-| Rows | 200 |
-| Analytical features | 3 |
-| Missing values | 0 |
-| Euclidean, Customer 1 vs 2 | **42.0476** |
-| Manhattan, Customer 1 vs 2 | **44.0000** |
-| Cosine similarity | **0.9694** |
-| Scaled Euclidean | **1.6368** |
-| Scaled Manhattan | **1.7740** |
-| Scaled Cosine similarity | **0.7659** |
+**Cosine**
 
-### Final conclusion
+$$
+\frac{A\cdot B}{\|A\|\|B\|}
+$$
 
-> Distance and similarity measures convert unlabeled observations into numerical relationships. Euclidean and Manhattan measure distance using different geometric assumptions, while Cosine measures directional alignment. Feature scaling changes the coordinate system and can therefore change distance-based relationships. Metric choice should match the meaning of “similar” in the problem.
+Compare direction.
+
+**Scaling**
+
+$$
+z=\frac{x-\mu}{\sigma}
+$$
+
+Make feature scales comparable.
 
 ---
 
-# 18. Final concept map
+# 13. Final conclusion
 
-```mermaid
-flowchart TB
-    A["📄 mall_customers.csv<br/>200 × 5"] --> B["🔎 EDA"]
-    B --> C["🧩 Select features"]
-    C --> D["📐 Build vectors"]
-    D --> E["📊 Pairwise measurement"]
-    E --> F["Euclidean"]
-    E --> G["Manhattan"]
-    E --> H["Cosine"]
-    F --> I["Nearest neighbours"]
-    G --> I
-    H --> I
-    I --> J["📏 Standardize"]
-    J --> K["🔁 Repeat"]
-    K --> L["📊 Compare"]
-    L --> M["🧠 Interpret"]
-    M --> N["📝 Record conclusion"]
+> We used 200 real customer records and three numerical features. We represented customers as vectors and measured their relationship using Euclidean distance, Manhattan distance, and Cosine similarity. The three metrics produced different results because they define similarity differently. Standardization also changed the results because it changed the feature scale.
+
+---
+
+## Complete code
+
+The repository also contains:
+
+```text
+similarity_lab.py
 ```
-
----
-
-## 19. Complete executable script
-
-The repository contains `similarity_lab.py`.
 
 Run:
 
@@ -826,17 +527,4 @@ Run:
 python similarity_lab.py
 ```
 
-The script performs:
-
-```text
-load
-→ validate
-→ EDA
-→ raw metrics
-→ standardization
-→ scaled metrics
-→ nearest neighbours
-→ save charts
-```
-
-Use the same script locally or from the repository.
+The script loads the real dataset, calculates all three metrics, finds nearest customers, performs scaling, and displays the customer chart.
