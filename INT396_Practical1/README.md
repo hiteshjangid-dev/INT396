@@ -256,7 +256,7 @@ Cosine asks:
 $$
 S_{\mathrm{cos}}(A,B)
 =
-\frac{A \cdot B}{\|A\|\,\|B\|}
+\frac{A \cdot B}{|A||B|}
 $$
 
 ### Code
